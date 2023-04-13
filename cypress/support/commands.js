@@ -23,3 +23,41 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+
+Cypress.Commands.add('selectDate', (dateToSelect) => {
+    let monthToSelect = dateToSelect.split('/')[0]
+    let dayToSelect = dateToSelect.split('/')[1]
+    let yearToSelect = dateToSelect.split('/')[2]
+    const dateObj = new Date(yearToSelect, monthToSelect - 1)
+    const monthName = dateObj.toLocaleString('default', { month: 'long' });
+  
+    cy.get('#datepicker')
+      .click()
+  
+    cy.get('.datepicker-switch')
+      .should('contain', new Date().getFullYear())
+  
+    function selectYearAndMonth(yearToSelect, monthName) {
+      cy.get('.datepicker-switch')
+        .invoke('text')
+        .then((text) => {
+          if (text.includes(yearToSelect) && text.includes(monthName)) {
+            cy.log(text)
+          } else {
+            cy.get('.datepicker-days > .table-condensed > thead > :nth-child(1) > .next')
+              .click()
+            selectYearAndMonth(yearToSelect, monthName)
+          }
+        })
+    }
+  
+    selectYearAndMonth(yearToSelect, monthName)
+  
+    cy.contains('td.day', dayToSelect)
+    .click()
+
+    dateToSelect = dateToSelect.replace(/\//g, '-')
+    cy.get('.form-control')
+    .should('have.value', dateToSelect)
+  })
+  
